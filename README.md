@@ -10,7 +10,7 @@ Por meio de experimentos controlados em um simulador completo de sistema, é pos
 
 ## Objetivos
 
-Cada grupo (4 a 5 pessoas) deve utilizar um simulador de arquitetura de computadores para propor cenários experimentais capazes de validar conceitos fundamentais relacionados a:
+Propor cenários experimentais capazes de validar conceitos fundamentais relacionados a:
 
 - **Localidade temporal e espacial** — verificar como padrões de acesso sequenciais ou repetitivos afetam o desempenho em função do reaproveitamento de dados já presentes na cache.
 - **Comportamento de caches** — analisar métricas como taxa de acertos (*hit rate*), taxa de faltas (*miss rate*) e o efeito de diferentes políticas de substituição e tamanhos de bloco.
