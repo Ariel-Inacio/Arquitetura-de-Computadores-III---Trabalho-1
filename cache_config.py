@@ -18,10 +18,10 @@ else:
 # System configuration
 system = System()
 system.clk_domain = SrcClockDomain()
-system.clk_domain.clock = '2GHz'
+system.clk_domain.clock = '4GHz'
 system.clk_domain.voltage_domain = VoltageDomain()
 system.mem_mode = 'timing'
-system.mem_ranges = [AddrRange('2GB')]
+system.mem_ranges = [AddrRange('8GB')]
 
 # CPU: X86 TimingSimpleCPU
 system.cpu = X86TimingSimpleCPU()
