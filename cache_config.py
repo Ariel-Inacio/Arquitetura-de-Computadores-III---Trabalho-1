@@ -70,6 +70,9 @@ system.l3cache = Cache(
     tgts_per_mshr=12
 )
 
+# Size of one cache line
+system.cache_line_size = 64
+
 # Create buses
 system.l2bus = NoncoherentXBar(
     frontend_latency=1,
