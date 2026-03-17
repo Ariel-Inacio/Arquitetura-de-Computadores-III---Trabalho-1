@@ -1,6 +1,7 @@
+import sys
+
 import m5
 from m5.objects import *
-import sys
 
 # Simple cache hierarchy configuration for gem5
 # Usage: ~/src/gem5/build/ALL/gem5.opt cache_config.py [workload_path] [workload_args...]
@@ -24,9 +25,6 @@ system.mem_ranges = [AddrRange('2GB')]
 
 # CPU: X86 TimingSimpleCPU
 system.cpu = X86TimingSimpleCPU()
-
-# Create caches
-from m5.objects import Cache
 
 # L1 instruction cache - 32KB, 8-way
 system.cpu.icache = Cache(
@@ -73,9 +71,24 @@ system.l3cache = Cache(
 )
 
 # Create buses
-system.l2bus = SystemXBar()
-system.l3bus = SystemXBar()
-system.membus = SystemXBar()
+system.l2bus = NoncoherentXBar(
+    frontend_latency=1,
+    forward_latency=2,
+    response_latency=2,
+    width=32
+)
+system.l3bus = NoncoherentXBar(
+    frontend_latency=1,
+    forward_latency=2,
+    response_latency=2,
+    width=32
+)
+system.membus = NoncoherentXBar(
+    frontend_latency=1,
+    forward_latency=2,
+    response_latency=2,
+    width=32
+)
 
 # Connect CPU to L1 caches
 system.cpu.icache_port = system.cpu.icache.cpu_side
