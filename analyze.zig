@@ -132,37 +132,19 @@ pub fn main() !void {
     std.debug.print("\n📊 Basic Metrics:\n", .{});
     std.debug.print("  Instructions: {}\n", .{sim_insts});
     std.debug.print("  CPU Cycles: {}\n", .{cpu_cycles});
-    std.debug.print("  IPC: {d:.4}\n", .{ipc});
-    std.debug.print("  CPI: {d:.4}\n", .{cpi});
+    std.debug.print("  IPC: {d:.6}\n", .{ipc});
+    std.debug.print("  CPI: {d:.6}\n", .{cpi});
 
     std.debug.print("\n🎯 Cache Performance (using gem5's pre-computed rates):\n", .{});
-    std.debug.print("  L1I: {} hits, {} misses (miss rate: {d:.4}% | {d:.2}% formatted)\n", .{ l1i_hits, l1i_misses, l1i_miss_rate_gem5, l1i_miss_rate_gem5 * 100.0 });
-    std.debug.print("  L1D: {} hits, {} misses (miss rate: {d:.4}% | {d:.2}% formatted)\n", .{ l1d_hits, l1d_misses, l1d_miss_rate_gem5, l1d_miss_rate_gem5 * 100.0 });
-    std.debug.print("  L2:  {} hits, {} misses (miss rate: {d:.4}% | {d:.2}% formatted)\n", .{ l2_hits, l2_misses, l2_miss_rate_gem5, l2_miss_rate_gem5 * 100.0 });
-    std.debug.print("  L3:  {} hits, {} misses (miss rate: {d:.4}% | {d:.2}% formatted)\n", .{ l3_hits, l3_misses, l3_miss_rate_gem5, l3_miss_rate_gem5 * 100.0 });
+    std.debug.print("  L1I: {} hits, {} misses (miss rate: {d:.6} | {d:.2}% formatted)\n", .{ l1i_hits, l1i_misses, l1i_miss_rate_gem5, l1i_miss_rate_gem5 * 100.0 });
+    std.debug.print("  L1D: {} hits, {} misses (miss rate: {d:.6} | {d:.2}% formatted)\n", .{ l1d_hits, l1d_misses, l1d_miss_rate_gem5, l1d_miss_rate_gem5 * 100.0 });
+    std.debug.print("  L2:  {} hits, {} misses (miss rate: {d:.6} | {d:.2}% formatted)\n", .{ l2_hits, l2_misses, l2_miss_rate_gem5, l2_miss_rate_gem5 * 100.0 });
+    std.debug.print("  L3:  {} hits, {} misses (miss rate: {d:.6} | {d:.2}% formatted)\n", .{ l3_hits, l3_misses, l3_miss_rate_gem5, l3_miss_rate_gem5 * 100.0 });
 
     std.debug.print("\n📈 MPKI (Misses Per Kilo Instructions):\n", .{});
-    std.debug.print("  L1I MPKI: {d:.4}\n", .{l1i_mpki});
-    std.debug.print("  L1D MPKI: {d:.2}\n", .{l1d_mpki});
-    std.debug.print("  L2 MPKI: {d:.2}\n", .{l2_mpki});
-    std.debug.print("  L3 MPKI: {d:.2}\n", .{l3_mpki});
-    std.debug.print("  Total MPKI: {d:.2}\n", .{l1i_mpki + l1d_mpki});
-
-    // Cache line utilization estimate (assuming 64-byte cache lines, 4-byte integers)
-    const integers_per_cache_line = 16;
-    if (l1d_accesses > 0) {
-        const effective_stride = if (l1d_misses > 0)
-            @as(f64, @floatFromInt(l1d_accesses)) / @as(f64, @floatFromInt(l1d_misses))
-        else
-            0.0;
-
-        if (effective_stride > 0 and effective_stride < @as(f64, integers_per_cache_line)) {
-            const utilization = 1.0 / effective_stride * 100.0;
-            std.debug.print("\n📏 Estimated cache line utilization: ~{d:.1}%\n", .{utilization});
-            if (utilization < 10.0) {
-                std.debug.print("  - Very poor cache line utilization!\n", .{});
-                std.debug.print("  - Each cache line fetch uses only ~{d:.1}% of the data\n", .{utilization});
-            }
-        }
-    }
+    std.debug.print("  L1I MPKI: {d:.6}\n", .{l1i_mpki});
+    std.debug.print("  L1D MPKI: {d:.4}\n", .{l1d_mpki});
+    std.debug.print("  L2 MPKI: {d:.4}\n", .{l2_mpki});
+    std.debug.print("  L3 MPKI: {d:.4}\n", .{l3_mpki});
+    std.debug.print("  Total MPKI: {d:.4}\n", .{l1i_mpki + l1d_mpki});
 }
