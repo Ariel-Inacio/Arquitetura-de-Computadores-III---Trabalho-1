@@ -18,14 +18,14 @@ system.clk_domain = SrcClockDomain()
 system.clk_domain.clock = '4GHz'
 system.clk_domain.voltage_domain = VoltageDomain()
 system.mem_mode = 'timing'
-system.mem_ranges = [AddrRange('8GB')]
+system.mem_ranges = [AddrRange('8GiB')]
 
 # CPU: X86 TimingSimpleCPU
 system.cpu = X86TimingSimpleCPU()
 
 # L1 instruction cache - 32KB, 8-way
 system.cpu.icache = Cache(
-    size='32kB',
+    size='32KiB',
     assoc=8,
     tag_latency=2,
     data_latency=2,
@@ -36,7 +36,7 @@ system.cpu.icache = Cache(
 
 # L1 data cache - 32KB, 8-way
 system.cpu.dcache = Cache(
-    size='32kB',
+    size='32KiB',
     assoc=8,
     tag_latency=2,
     data_latency=2,
@@ -47,7 +47,7 @@ system.cpu.dcache = Cache(
 
 # L2 cache - 256KB, 8-way
 system.l2cache = Cache(
-    size='256kB',
+    size='256KiB',
     assoc=8,
     tag_latency=20,
     data_latency=20,
@@ -58,7 +58,7 @@ system.l2cache = Cache(
 
 # L3 cache - 8MB, 16-way
 system.l3cache = Cache(
-    size='8MB',
+    size='8MiB',
     assoc=16,
     tag_latency=40,
     data_latency=40,
