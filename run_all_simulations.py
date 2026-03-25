@@ -63,7 +63,7 @@ def print_simulation_header(current: int, total: int, workload_name: str, config
     config_line = f" Configuration: {config_desc} "
 
     # Choose background color based on status in parallel_info
-    if "FAILED" in parallel_info or "ERROR" in parallel_info or "TIMEOUT" in parallel_info:
+    if "FAILED" in parallel_info or "ERROR" in parallel_info:
         bg_color = Colors.BG_MAGENTA  # Red/magenta for failures
     elif "SKIPPED" in parallel_info:
         bg_color = Colors.BG_CYAN  # Cyan for skipped
@@ -162,12 +162,23 @@ def run_single_simulation(sim_data: Dict[str, Any]) -> Tuple[bool, str, float]:
 
     try:
         start_time = time.time()
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)  # 10 minute timeout
+        # No timeout - simulations can take days
+        result = subprocess.run(cmd, capture_output=True, text=True)
         elapsed_time = time.time() - start_time
 
         if result.returncode == 0:
             # Print success header AFTER completion
-            parallel_info = f"Worker {worker_id} - COMPLETED in {elapsed_time:.1f}s"
+            # Format elapsed time nicely (handle hours/days)
+            if elapsed_time < 60:
+                time_str = f"{elapsed_time:.1f}s"
+            elif elapsed_time < 3600:
+                time_str = f"{elapsed_time/60:.1f}min"
+            elif elapsed_time < 86400:
+                time_str = f"{elapsed_time/3600:.1f}h"
+            else:
+                time_str = f"{elapsed_time/86400:.1f}days"
+            
+            parallel_info = f"Worker {worker_id} - COMPLETED in {time_str}"
             print_simulation_header(sim_index, total_sims, workload_name, desc, parallel_info)
             synchronized_print(f"{Colors.OKGREEN}[Worker {worker_id}] ✓ Success{Colors.ENDC}")
             # Mark as completed
@@ -181,12 +192,6 @@ def run_single_simulation(sim_data: Dict[str, Any]) -> Tuple[bool, str, float]:
             synchronized_print(f"{Colors.FAIL}[Worker {worker_id}] ✗ Error: {error_msg}...{Colors.ENDC}")
             return (False, desc, elapsed_time)
 
-    except subprocess.TimeoutExpired:
-        # Print timeout header AFTER timeout
-        parallel_info = f"Worker {worker_id} - TIMEOUT"
-        print_simulation_header(sim_index, total_sims, workload_name, desc, parallel_info)
-        synchronized_print(f"{Colors.FAIL}[Worker {worker_id}] ✗ Timed out after 600 seconds{Colors.ENDC}")
-        return (False, desc, 600.0)
     except Exception as e:
         # Print error header AFTER error
         parallel_info = f"Worker {worker_id} - ERROR"
