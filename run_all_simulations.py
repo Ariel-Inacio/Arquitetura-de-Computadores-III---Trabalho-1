@@ -4,13 +4,13 @@ Wrapper script to run gem5 simulations with all parameter variations for a given
 Usage: ./run_all_simulations.py <gem5_executable> <workload_binary> [workload_args...]
 """
 
-import os
 import sys
 import subprocess
 import argparse
 from pathlib import Path
 import time
 from datetime import datetime
+from typing import List, Optional, Tuple
 
 # ANSI color codes for terminal output
 class Colors:
@@ -29,7 +29,7 @@ class Colors:
     BG_CYAN = '\033[46m'
     BLACK = '\033[30m'
 
-def print_simulation_header(current, total, workload_name, config_desc):
+def print_simulation_header(current: int, total: int, workload_name: str, config_desc: str) -> None:
     """Print a colored header for the current simulation."""
     percentage = (current / total) * 100
     header = f" SIMULATION {current}/{total} ({percentage:.1f}%) - {workload_name} "
@@ -54,7 +54,7 @@ def print_simulation_header(current, total, workload_name, config_desc):
     print(f" {border} ")
     print(f"{Colors.ENDC}\n")
 
-def check_simulation_completed(output_dir):
+def check_simulation_completed(output_dir: Path) -> bool:
     """Check if a simulation has completed successfully."""
     completed_file = output_dir / '.completed'
     stats_file = output_dir / 'stats.txt'
@@ -78,10 +78,10 @@ def check_simulation_completed(output_dir):
 
     return False
 
-def run_simulation(gem5_exe, cache_config, workload, workload_args, output_dir, param_name=None, param_value=None):
+def run_simulation(gem5_exe: str, cache_config_script: str, workload: str, workload_args: List[str], output_dir: Path, param_name: Optional[str] = None, param_value: Optional[str] = None) -> bool:
     """Run a single gem5 simulation with given parameters."""
     # Build the command
-    cmd = [gem5_exe, '-d', str(output_dir), '--', 'cache_config.py']
+    cmd = [gem5_exe, '-d', str(output_dir), '--', cache_config_script]
 
     # Add cache configuration parameter if specified
     if param_name and param_value:
@@ -117,9 +117,9 @@ def run_simulation(gem5_exe, cache_config, workload, workload_args, output_dir, 
         print(f"{Colors.FAIL}✗ Error running simulation: {e}{Colors.ENDC}")
         return False
 
-def get_all_parameter_variations():
+def get_all_parameter_variations() -> List[Tuple[str, str, str]]:
     """Get all parameter variations to test."""
-    variations = []
+    variations: List[Tuple[str, str, str]] = []
 
     # Cache size configurations
     cache_configs = [
@@ -191,7 +191,7 @@ def main():
     variations = get_all_parameter_variations()
 
     # Add baseline (no parameters) as the first simulation
-    all_simulations = [('baseline', None, None, 'baseline')]
+    all_simulations: List[Tuple[str, Optional[str], Optional[str], str]] = [('baseline', None, None, 'baseline')]
 
     # Add all variations
     for param_name, param_value, dir_suffix in variations:
