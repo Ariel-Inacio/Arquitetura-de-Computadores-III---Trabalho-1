@@ -12,10 +12,16 @@ from pathlib import Path
 import time
 from datetime import datetime
 from typing import List, Optional, Tuple, Dict, Any
-from multiprocessing import Pool, Lock, Queue, Manager
+from multiprocessing import Pool, Lock, Queue, Manager, current_process
 from functools import partial
 import signal
 import os
+try:
+    import psutil
+    PSUTIL_AVAILABLE = True
+except ImportError:
+    PSUTIL_AVAILABLE = False
+    print("Warning: psutil not installed. CPU pinning disabled. Install with: pip install psutil", file=sys.stderr)
 
 # ANSI color codes for terminal output
 class Colors:
@@ -37,13 +43,23 @@ class Colors:
 
 # Global lock for synchronized printing
 print_lock: Optional[Lock] = None
+worker_cpu_map: Dict[int, int] = {}  # Map worker ID to CPU core
 
-def init_worker(lock: Lock) -> None:
-    """Initialize worker process with shared lock."""
+def init_worker(lock: Lock, worker_id: int, cpu_core: Optional[int]) -> None:
+    """Initialize worker process with shared lock and CPU affinity."""
     global print_lock
     print_lock = lock
     # Ignore SIGINT in worker processes
     signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+    # Set CPU affinity if specified and psutil is available
+    if cpu_core is not None and PSUTIL_AVAILABLE:
+        try:
+            p = psutil.Process()
+            p.cpu_affinity([cpu_core])
+            synchronized_print(f"{Colors.OKCYAN}[Worker {worker_id}] Pinned to CPU core {cpu_core}{Colors.ENDC}")
+        except Exception as e:
+            synchronized_print(f"{Colors.WARNING}[Worker {worker_id}] Could not set CPU affinity: {e}{Colors.ENDC}")
 
 def synchronized_print(*args, **kwargs) -> None:
     """Thread-safe printing function."""
@@ -177,7 +193,7 @@ def run_single_simulation(sim_data: Dict[str, Any]) -> Tuple[bool, str, float]:
                 time_str = f"{elapsed_time/3600:.1f}h"
             else:
                 time_str = f"{elapsed_time/86400:.1f}days"
-            
+
             parallel_info = f"Worker {worker_id} - COMPLETED in {time_str}"
             print_simulation_header(sim_index, total_sims, workload_name, desc, parallel_info)
             synchronized_print(f"{Colors.OKGREEN}[Worker {worker_id}] ✓ Success{Colors.ENDC}")
@@ -198,6 +214,18 @@ def run_single_simulation(sim_data: Dict[str, Any]) -> Tuple[bool, str, float]:
         print_simulation_header(sim_index, total_sims, workload_name, desc, parallel_info)
         synchronized_print(f"{Colors.FAIL}[Worker {worker_id}] ✗ Error: {e}{Colors.ENDC}")
         return (False, desc, 0.0)
+
+def worker_wrapper(task_queue, result_queue, worker_id: int, lock, cpu_core: Optional[int]) -> None:
+    """Worker process that pulls tasks from queue."""
+    init_worker(lock, worker_id, cpu_core)
+    
+    while True:
+        task = task_queue.get()
+        if task is None:  # Sentinel value to stop
+            break
+        task['worker_id'] = worker_id
+        result = run_single_simulation(task)
+        result_queue.put(result)
 
 def get_all_parameter_variations() -> List[Tuple[str, str, str]]:
     """Get all parameter variations to test."""
@@ -245,6 +273,8 @@ def main():
     parser.add_argument('--dry-run', action='store_true', help='Show what would be run without executing')
     parser.add_argument('--parallel', '-j', type=int, default=1,
                         help='Number of parallel simulations to run (default: 1, use -1 for all CPU cores)')
+    parser.add_argument('--pin-workers', action='store_true',
+                        help='Pin worker processes to specific CPU cores (requires psutil)')
 
     args = parser.parse_args()
 
@@ -341,36 +371,72 @@ def main():
                 failed += 1
     else:
         # Parallel execution
-        print(f"{Colors.OKCYAN}Running simulations in parallel with {num_workers} workers...{Colors.ENDC}\n")
+        print(f"{Colors.OKCYAN}Running simulations in parallel with {num_workers} workers...{Colors.ENDC}")
 
-        # Assign worker IDs to tasks
-        for i, sim_data in enumerate(simulation_tasks):
-            sim_data['worker_id'] = (i % num_workers) + 1
+        # Determine CPU cores to use for pinning
+        cpu_cores_to_use = None
+        if PSUTIL_AVAILABLE and args.pin_workers:
+            try:
+                available_cpus = list(range(os.cpu_count() or 1))
+                if num_workers <= len(available_cpus):
+                    cpu_cores_to_use = available_cpus[:num_workers]
+                    print(f"{Colors.OKCYAN}CPU pinning enabled: Workers will be pinned to cores {cpu_cores_to_use}{Colors.ENDC}")
+                else:
+                    print(f"{Colors.WARNING}Warning: More workers ({num_workers}) than CPU cores ({len(available_cpus)}). CPU pinning disabled.{Colors.ENDC}")
+            except Exception as e:
+                print(f"{Colors.WARNING}Warning: Could not determine CPU cores: {e}. CPU pinning disabled.{Colors.ENDC}")
+        elif args.pin_workers and not PSUTIL_AVAILABLE:
+            print(f"{Colors.WARNING}Warning: CPU pinning requested but psutil not installed. Install with: pip install psutil{Colors.ENDC}")
+
+        print()  # Empty line for readability
 
         # Create manager for shared lock
         manager = Manager()
         lock = manager.Lock()
 
-        # Initialize pool with lock
-        try:
-            with Pool(processes=num_workers, initializer=init_worker, initargs=(lock,)) as pool:
-                # Set up global lock for main process too
-                global print_lock
-                print_lock = lock
+        # Set up global lock for main process
+        global print_lock
+        print_lock = lock
 
-                # Run simulations
-                results = pool.map(run_single_simulation, simulation_tasks)
+        # Create pool with custom worker initialization
+        # We'll create workers manually to assign CPU cores
+        from multiprocessing import Process, Queue
+        
+        # Create queues
+        task_queue = Queue()
+        result_queue = Queue()
 
-                # Count results
-                completed = sum(1 for success, _, elapsed in results if success and elapsed > 0)
-                failed = sum(1 for success, _, _ in results if not success)
-                skipped = sum(1 for _, _, elapsed in results if elapsed == 0.0)
+        # Start worker processes
+        workers = []
+        for i in range(num_workers):
+            worker_id = i + 1
+            cpu_core = cpu_cores_to_use[i] if cpu_cores_to_use else None
+            p = Process(target=worker_wrapper, args=(task_queue, result_queue, worker_id, lock, cpu_core))
+            p.start()
+            workers.append(p)
 
-        except KeyboardInterrupt:
-            print(f"\n{Colors.WARNING}Interrupted by user. Terminating workers...{Colors.ENDC}")
-            pool.terminate()
-            pool.join()
-            sys.exit(1)
+        # Add tasks to queue
+        for sim_data in simulation_tasks:
+            task_queue.put(sim_data)
+
+        # Add sentinel values to stop workers
+        for _ in range(num_workers):
+            task_queue.put(None)
+
+        # Collect results
+        results = []
+        for _ in range(len(simulation_tasks)):
+            result = result_queue.get()
+            results.append(result)
+
+        # Wait for workers to finish
+        for p in workers:
+            p.join()
+
+        # Count results
+        completed = sum(1 for success, _, elapsed in results if success and elapsed > 0)
+        failed = sum(1 for success, _, _ in results if not success)
+        skipped = sum(1 for _, _, elapsed in results if elapsed == 0.0)
 
     # Print summary
     print(f"\n{Colors.BOLD}{Colors.HEADER}=== SIMULATION SUMMARY ==={Colors.ENDC}")
