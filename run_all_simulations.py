@@ -96,15 +96,14 @@ def print_simulation_header(current: int, total: int, workload_name: str, config
         lines.append(f" {parallel_info} ")
 
     max_len = max(len(line) for line in lines)
-    border = "=" * (max_len + 2)
+    border = "=" * (max_len)
 
-    output = []
-    output.append(f"\n{Colors.BOLD}{bg_color}{Colors.BLACK}")
-    output.append(f" {border} ")
+    output = ['']
+    output.append(f"{Colors.BOLD}{bg_color}{Colors.BLACK} {border} {Colors.ENDC}")
     for line in lines:
-        output.append(f" {line.center(max_len)} ")
-    output.append(f" {border} ")
-    output.append(f"{Colors.ENDC}\n")
+        output.append(f"{Colors.BOLD}{bg_color}{Colors.BLACK} {line.center(max_len)} {Colors.ENDC}")
+    output.append(f"{Colors.BOLD}{bg_color}{Colors.BLACK} {border} {Colors.ENDC}")
+    output.append('')
 
     synchronized_print('\n'.join(output))
 
@@ -218,7 +217,7 @@ def run_single_simulation(sim_data: Dict[str, Any]) -> Tuple[bool, str, float]:
 def worker_wrapper(task_queue, result_queue, worker_id: int, lock, cpu_core: Optional[int]) -> None:
     """Worker process that pulls tasks from queue."""
     init_worker(lock, worker_id, cpu_core)
-    
+
     while True:
         task = task_queue.get()
         if task is None:  # Sentinel value to stop
@@ -401,7 +400,7 @@ def main():
         # Create pool with custom worker initialization
         # We'll create workers manually to assign CPU cores
         from multiprocessing import Process, Queue
-        
+
         # Create queues
         task_queue = Queue()
         result_queue = Queue()
