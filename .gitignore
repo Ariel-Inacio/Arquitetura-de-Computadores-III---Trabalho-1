@@ -5,6 +5,7 @@ zig-cache/
 
 # gem5 results and output
 results/
+figures/
 *.txt
 *.log
 
