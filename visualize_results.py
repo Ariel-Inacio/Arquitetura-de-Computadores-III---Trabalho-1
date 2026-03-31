@@ -27,6 +27,7 @@ from typing import Dict, List, Optional, Tuple, Callable, Sequence, Union, Any
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 # =============================================================================
 # STYLE CONFIGURATION - Easy to edit for publication
@@ -260,24 +261,28 @@ def parse_stats_file(stats_path: Path) -> Optional[SimulationStats]:
     stats.cpi = extract_value(r'^system\.cpu\.cpi')
 
     # L1 Data Cache
-    stats.l1d_cache.misses = int(extract_value(r'system\.cpu\.dcache\.demandMisses::total'))
-    stats.l1d_cache.miss_rate = extract_value(r'system\.cpu\.dcache\.demandMissRate::total')
-    stats.l1d_cache.miss_latency = extract_value(r'system\.cpu\.dcache\.overallMissLatency::total')
+    stats.l1d_cache.hits = int(extract_value(r'^system\.cpu\.dcache\.demandHits::total'))
+    stats.l1d_cache.misses = int(extract_value(r'^system\.cpu\.dcache\.demandMisses::total'))
+    stats.l1d_cache.miss_rate = extract_value(r'^system\.cpu\.dcache\.demandMissRate::total')
+    stats.l1d_cache.miss_latency = extract_value(r'^system\.cpu\.dcache\.overallMissLatency::total')
 
     # L1 Instruction Cache
-    stats.l1i_cache.misses = int(extract_value(r'system\.cpu\.icache\.demandMisses::total'))
-    stats.l1i_cache.miss_rate = extract_value(r'system\.cpu\.icache\.demandMissRate::total')
-    stats.l1i_cache.miss_latency = extract_value(r'system\.cpu\.icache\.overallMissLatency::total')
+    stats.l1i_cache.hits = int(extract_value(r'^system\.cpu\.icache\.demandHits::total'))
+    stats.l1i_cache.misses = int(extract_value(r'^system\.cpu\.icache\.demandMisses::total'))
+    stats.l1i_cache.miss_rate = extract_value(r'^system\.cpu\.icache\.demandMissRate::total')
+    stats.l1i_cache.miss_latency = extract_value(r'^system\.cpu\.icache\.overallMissLatency::total')
 
-    # L2 Cache
-    stats.l2_cache.misses = int(extract_value(r'system\.l2cache\.demandMisses::total'))
-    stats.l2_cache.miss_rate = extract_value(r'system\.l2cache\.demandMissRate::total')
-    stats.l2_cache.miss_latency = extract_value(r'system\.l2cache\.overallMissLatency::total')
+    # L2 Cache (note: L2 may not have demandHits in gem5 depending on configuration)
+    stats.l2_cache.hits = int(extract_value(r'^system\.l2cache\.demandHits::total'))
+    stats.l2_cache.misses = int(extract_value(r'^system\.l2cache\.demandMisses::total'))
+    stats.l2_cache.miss_rate = extract_value(r'^system\.l2cache\.demandMissRate::total')
+    stats.l2_cache.miss_latency = extract_value(r'^system\.l2cache\.overallMissLatency::total')
 
     # L3 Cache
-    stats.l3_cache.misses = int(extract_value(r'system\.l3cache\.demandMisses::total'))
-    stats.l3_cache.miss_rate = extract_value(r'system\.l3cache\.demandMissRate::total')
-    stats.l3_cache.miss_latency = extract_value(r'system\.l3cache\.overallMissLatency::total')
+    stats.l3_cache.hits = int(extract_value(r'^system\.l3cache\.demandHits::total'))
+    stats.l3_cache.misses = int(extract_value(r'^system\.l3cache\.demandMisses::total'))
+    stats.l3_cache.miss_rate = extract_value(r'^system\.l3cache\.demandMissRate::total')
+    stats.l3_cache.miss_latency = extract_value(r'^system\.l3cache\.overallMissLatency::total')
 
     # Compute MPKI (Misses Per Kilo Instructions)
     if stats.sim_insts > 0:
@@ -801,6 +806,101 @@ def create_comparison_figures(
         plt.close(fig)
 
 
+def save_results_csv(all_results: Dict[str, List[SimulationStats]], out_dir: Path) -> None:
+    """Save all_results into a pandas DataFrame and write to CSV.
+
+    Uses pandas nullable integer dtype `Int64` for integer columns and
+    `float64` for floating columns. String columns use pandas `string` dtype.
+    """
+    records: List[Dict[str, Any]] = []
+
+    for wl, stats_list in all_results.items():
+        for s in stats_list:
+            rec: Dict[str, Any] = {
+                'workload': wl,
+                'config_type': s.config_type,
+                'config_value': s.config_value,
+
+                # CPU stats
+                'sim_insts': int(s.sim_insts),
+                'sim_cycles': int(s.sim_cycles),
+                'ipc': float(s.ipc),
+                'cpi': float(s.cpi),
+
+                # L1D
+                'l1d_hits': int(s.l1d_cache.hits),
+                'l1d_misses': int(s.l1d_cache.misses),
+                'l1d_miss_rate': float(s.l1d_cache.miss_rate),
+                'l1d_miss_latency': float(s.l1d_cache.miss_latency),
+
+                # L1I
+                'l1i_hits': int(s.l1i_cache.hits),
+                'l1i_misses': int(s.l1i_cache.misses),
+                'l1i_miss_rate': float(s.l1i_cache.miss_rate),
+                'l1i_miss_latency': float(s.l1i_cache.miss_latency),
+
+                # L2
+                'l2_hits': int(s.l2_cache.hits),
+                'l2_misses': int(s.l2_cache.misses),
+                'l2_miss_rate': float(s.l2_cache.miss_rate),
+                'l2_miss_latency': float(s.l2_cache.miss_latency),
+
+                # L3
+                'l3_hits': int(s.l3_cache.hits),
+                'l3_misses': int(s.l3_cache.misses),
+                'l3_miss_rate': float(s.l3_cache.miss_rate),
+                'l3_miss_latency': float(s.l3_cache.miss_latency),
+
+                # Computed
+                'l1d_mpki': float(s.l1d_mpki),
+                'l2_mpki': float(s.l2_mpki),
+                'l3_mpki': float(s.l3_mpki),
+                'total_miss_latency': float(s.total_miss_latency),
+            }
+
+            rec['config_display_name'] = CONFIG_DISPLAY_NAMES.get(s.config_value, '')
+            rec['total_cache_bytes'] = get_total_cache_size(s.config_value) if s.config_type == 'cache_config' else None
+
+            records.append(rec)
+
+    if not records:
+        print('No records to save; skipping CSV export')
+        return
+
+    df = pd.DataFrame.from_records(records)
+
+    # Columns by intended dtype
+    int_cols = [
+        'sim_insts', 'sim_cycles',
+        'l1d_hits', 'l1d_misses', 'l1i_hits', 'l1i_misses',
+        'l2_hits', 'l2_misses', 'l3_hits', 'l3_misses',
+        'total_cache_bytes',
+    ]
+    float_cols = [
+        'ipc', 'cpi',
+        'l1d_miss_rate', 'l1d_miss_latency', 'l1i_miss_rate', 'l1i_miss_latency',
+        'l2_miss_rate', 'l2_miss_latency', 'l3_miss_rate', 'l3_miss_latency',
+        'l1d_mpki', 'l2_mpki', 'l3_mpki', 'total_miss_latency',
+    ]
+    str_cols = ['workload', 'config_type', 'config_value', 'config_display_name']
+
+    for c in int_cols:
+        if c in df.columns:
+            df[c] = pd.to_numeric(df[c], errors='coerce').astype('Int64')
+
+    for c in float_cols:
+        if c in df.columns:
+            df[c] = pd.to_numeric(df[c], errors='coerce').astype('float64')
+
+    for c in str_cols:
+        if c in df.columns:
+            df[c] = df[c].astype('string')
+
+    out_path = out_dir / 'simulation_results.csv'
+    df.to_csv(out_path, index=False)
+    print(f'Saved combined simulation results to: {out_path}')
+
+
 # =============================================================================
 # MAIN FUNCTION
 # =============================================================================
@@ -846,6 +946,12 @@ def main():
     # Generate comparison figures
     print("Generating comparison figures...")
     create_comparison_figures(all_results, figures_dir)
+
+    # Save all numerical results to CSV using pandas
+    try:
+        save_results_csv(all_results, figures_dir)
+    except Exception as e:
+        print('WARNING: failed to save simulation CSV:', e)
 
     print()
     print("=" * 50)
