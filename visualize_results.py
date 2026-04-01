@@ -26,6 +26,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple, Callable, Sequence, Union, Any
 
 import matplotlib.pyplot as plt
+from matplotlib import cm, colors as mcolors
 import numpy as np
 import pandas as pd  # type: ignore[import-not-found]
 import scienceplots  # type: ignore[import-not-found]
@@ -142,6 +143,55 @@ def _series_style_kwargs(
     if markers:
         kw["marker"] = markers[index % len(markers)]
     return kw
+
+
+def _hex_color(c: Any) -> str:
+    """Normalize any Matplotlib color to a hex string (no alpha)."""
+    # mcolors.to_hex safely handles named colors, RGB(A) tuples, etc.
+    return mcolors.to_hex(c, keep_alpha=False).lower()
+
+
+def expand_color_cycle(base_colors: Sequence[Any], required_count: int) -> List[str]:
+    """Return a color list at least `required_count` long.
+
+    - Preserves the original style colors order for the first N entries
+    - Appends additional distinct colors sourced from qualitative colormaps
+      (tab10/tab20/Set2/Dark2/Paired/Accent)
+    - Falls back to simple HSV sampling if still short
+    This keeps IEEE style intact while adding extra distinct colors when
+    comparing > len(style.colors) series (e.g., 5 workloads vs 4 colors).
+    """
+    palette: List[str] = [_hex_color(c) for c in base_colors]
+    if len(palette) >= required_count:
+        return palette[:required_count]
+
+    candidate_cmaps = ["tab10", "tab20", "Set2", "Dark2", "Paired", "Accent"]
+    for cmap_name in candidate_cmaps:
+        try:
+            cmap = cm.get_cmap(cmap_name)
+        except Exception:
+            continue
+        n = getattr(cmap, "N", 10)
+        # Sample all discrete entries in the map
+        for i in range(n):
+            col = cmap(i / max(1, n - 1))
+            hx = _hex_color(col)
+            if hx not in palette:
+                palette.append(hx)
+                if len(palette) >= required_count:
+                    return palette
+
+    # Fallback: generate additional colors by sampling HSV with golden ratio
+    # This ensures reasonably spaced hues if qualitative maps were insufficient
+    phi = 0.61803398875
+    h = 0.0
+    while len(palette) < required_count:
+        h = (h + phi) % 1.0
+        rgb = mcolors.hsv_to_rgb((h, 0.55, 0.9))
+        hx = _hex_color(tuple(rgb))
+        if hx not in palette:
+            palette.append(hx)
+    return palette
 
 
 # Cache size configurations from cache_config.py (total cache size for sorting)
@@ -1204,6 +1254,8 @@ def create_comparison_figures(
                     n_bars = len(workload_data)
                     bar_width = 0.8 / n_bars
                     x_numeric = np.arange(n_groups)
+                    # Extend IEEE style colors to cover all workloads if needed
+                    st["colors"] = expand_color_cycle(st["colors"], n_bars)
                     for idx, (workload, y_values) in enumerate(workload_data.items()):
                         if baseline_idx_global is not None:
                             y_plot = [
@@ -1310,6 +1362,8 @@ def create_comparison_figures(
                     n_bars = len(workload_data)
                     bar_width = 0.8 / n_bars
                     x_numeric = np.arange(n_groups)
+                    # Extend IEEE style colors to cover all workloads if needed
+                    st["colors"] = expand_color_cycle(st["colors"], n_bars)
                     for idx, (workload, y_values) in enumerate(workload_data.items()):
                         offset = (idx - n_bars / 2 + 0.5) * bar_width
                         ax.bar(
