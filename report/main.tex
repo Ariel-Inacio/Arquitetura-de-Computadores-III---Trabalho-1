@@ -38,19 +38,19 @@
 
 \begin{abstract}
 
-    This work presents a systematic, reproducible study of cache hierarchy
-    effects on a set of five PolyBench kernels using gem5. We perform a
-    controlled parameter sweep over cache sizes, cache line sizes, and
-    associativities, and collected detailed gem5 statistics for each run. We
-    focus on standard microarchitectural metrics (miss rate, \textsc{mpki},
-    \textsc{ipc}/\textsc{cpi}, memory-related stall cycles) and on relative
-    speedup against a baseline configuration. Results show workload-dependent
-    tradeoffs: some kernels are dominated by data working‑set effects (L1D/L2),
-    while others exhibit negligible icache pressure; visualization and
-    \textsc{mpki} decomposition reveal where increased capacity or associativity
-    yields diminishing returns. The artifacts and methodology aim to help
-    students and researchers perform rigorous, replicable cache design‑space
-    evaluations.
+	This work presents a systematic, reproducible study of cache hierarchy
+	effects on a set of five PolyBench kernels using gem5. We perform a
+	controlled parameter sweep over cache sizes, cache line sizes, and
+	associativities, and collected detailed gem5 statistics for each run. We
+	focus on standard microarchitectural metrics (miss rate, \textsc{mpki},
+	\textsc{ipc}/\textsc{cpi}, memory-related stall cycles) and on relative
+	speedup against a baseline configuration. Results show workload-dependent
+	tradeoffs: some kernels are dominated by data working‑set effects (L1D/L2),
+	while others exhibit negligible icache pressure; visualization and
+	\textsc{mpki} decomposition reveal where increased capacity or
+	associativity yields diminishing returns. The artifacts and methodology aim
+	to help students and researchers perform rigorous, replicable cache
+	design‑space evaluations.
 
 \end{abstract}
 
@@ -67,17 +67,17 @@
 When designing or modeling computer architectures, memory hierarchy
 configurations are responsible for much of a system's performance across a
 variety of workloads. Modern computer architectures face a fundamental problem,
-known as a \textit{memory wall} \cite{wulf:1995}, the
-growing disparity between the speed of \textsc{cpu} cores and main memory
-latencies. To mitigate this, most if not all serious implementations of modern
-instruction set architectures (\textsc{isa}s) employ complex memory hierarchies,
-split across multiple levels, and which exploit locality. This hierarchy
-encompasses each core's register file, different cache levels, as well as
-main and secondary memories, and is one of the cornerstones of contemporary
-architecture design. Its configuration parameters determine not only the maximum
-throughput of high-performance systems, but also the energy efficiency and the
-viability of low-power systems, as in single-board computers (\textsc{sbc}s) and
-distributed systems.
+known as a \textit{memory wall} \cite{wulf:1995}, the growing disparity between
+the speed of \textsc{cpu} cores and main memory latencies. To mitigate this,
+most if not all serious implementations of modern instruction set architectures
+(\textsc{isa}s) employ complex memory hierarchies, split across multiple
+levels, and which exploit locality. This hierarchy encompasses each core's
+register file, different cache levels, as well as main and secondary memories,
+and is one of the cornerstones of contemporary architecture design. Its
+configuration parameters determine not only the maximum throughput of
+high-performance systems, but also the energy efficiency and the viability of
+low-power systems, as in single-board computers (\textsc{sbc}s) and distributed
+systems.
 
 The efficacy of a given memory hierarchy hinges on the ability to exploit
 temporal and spatial localities in data accesses. However, the precise
@@ -90,30 +90,31 @@ domain-dependent question, and requires detailed empirical exploration.
 
 Although much research has been done on the impact of cache configuration
 parameters on a variety of workloads, most analyses measure only specific
-individual metrics, focus on a small domain of specific workloads, or evaluate a
-limited set of configuration parameters in isolation. Thus, it is often
+individual metrics, focus on a small domain of specific workloads, or evaluate
+a limited set of configuration parameters in isolation. Thus, it is often
 difficult to systematically compare the relative effects of different cache
 design choices on a wide array of workloads in a controlled, reproducible
 manner. The lack of such multi-parameter evaluations motivates the need for a
-methodology that enables consistent and interpretable explorations of the design
-space.
+methodology that enables consistent and interpretable explorations of the
+design space.
 
 \subsection{Objective}
 
 In this work, we aim to conduct controlled architectural experiments using
-select kernels from the PolyBench benchmark suite \cite{polybench:2016} in order
-to investigate the impact of different cache memory configurations on select
-performance metrics. A set of experimental scenarios is designed by sweeping key
-parameters of the memory hierarchy, including cache size, cache line size, and
-associativity levels for all cache levels. The experiments will be conducted
-using the gem5 architectural simulator \cite{gem5-20:2007}. The evaluation is
-based on the analysis of select performance metrics such as multi-level miss
-rates and \textsc{mpki} (Misses Per Kilo Instructions) counts, speedup across
-different simulated architectures, and memory-related stall cycles. Through this
-analysis, we seek to provide a deeper understanding of how variations in cache
-parameters effect changes in standard microarchitectural metrics in the
-execution behavior of PolyBench benchmarks, and thus enable the identification
-of potential optimization opportunities within the memory hierarchy.
+select kernels from the PolyBench benchmark suite \cite{polybench:2016} in
+order to investigate the impact of different cache memory configurations on
+select performance metrics. A set of experimental scenarios is designed by
+sweeping key parameters of the memory hierarchy, including cache size, cache
+line size, and associativity levels for all cache levels. The experiments will
+be conducted using the gem5 architectural simulator \cite{gem5-20:2007}. The
+evaluation is based on the analysis of select performance metrics such as
+multi-level miss rates and \textsc{mpki} (Misses Per Kilo Instructions) counts,
+speedup across different simulated architectures, and memory-related stall
+cycles. Through this analysis, we seek to provide a deeper understanding of how
+variations in cache parameters effect changes in standard microarchitectural
+metrics in the execution behavior of PolyBench benchmarks, and thus enable the
+identification of potential optimization opportunities within the memory
+hierarchy.
 
 \subsection{Contribution}
 
@@ -134,9 +135,9 @@ trade-offs involved in memory hierarchy configuration.
 
 From an architectural optimization perspective, Khoshavi and DeMara
 \cite{khoshavi:2018} investigate the use of emerging non-volatile memories
-within the cache hierarchy. The authors propose the \textsc{rrap} strategy (Read
-Reference Activity Persistent), a hybrid architecture that replaces conventional
-\textsc{sram} with a combination of low- and high-retention
+within the cache hierarchy. The authors propose the \textsc{rrap} strategy
+(Read Reference Activity Persistent), a hybrid architecture that replaces
+conventional \textsc{sram} with a combination of low- and high-retention
 \textsc{stt}-\textsc{ram} (Spin-Transfer Torque Random Access Memory). Their
 results indicate a 51.7\% reduction in L2 cache read miss rate, along with
 improvements in area and energy consumption, without degrading system
@@ -144,75 +145,90 @@ performance.
 
 From a methodological standpoint, Bueno et al. \cite{bueno:2024} emphasize the
 importance of experimental rigor and reproducibility in memory architecture
-evaluation. Their work proposes a weight redefinition methodology for simulation
-intervals based on memory activity (\textsc{mpki}). The authors demonstrate that
-this approach reduces discrepancies in the analysis of replacement policies by
-more than 30\%, highlighting that the reliability of results strongly depends on
-the quality of the experimental procedure.
+evaluation. Their work proposes a weight redefinition methodology for
+simulation intervals based on memory activity (\textsc{mpki}). The authors
+demonstrate that this approach reduces discrepancies in the analysis of
+replacement policies by more than 30\%, highlighting that the reliability of
+results strongly depends on the quality of the experimental procedure.
 
-The validation of proposals in this domain relies on well-established simulation
-infrastructures. The gem5 architectural simulator \cite{gem5-20:2007} has become
-a fundamental tool for detailed architectural modeling, enabling systematic
-exploration of design parameters. In parallel, the investigation of spatial and
-temporal locality requires representative workloads, for which the PolyBench
-suite \cite{polybench:2016} is widely adopted due to its collection of
-mathematical kernels. The versatility of gem5 has further driven recent research
-focused on Design Space Exploration (\textsc{dse}), of which a representative
-example is the work of Shahid et al. \cite{shahid:2025}, in which the authors
-employ the framework to improve the performance of the \textsc{risc}-V
-\textsc{cva6} core. Through parametric simulations, they identify configurations
-capable of balancing hardware cost and processor performance. This approach
-reinforces the suitability of gem5 not only as a tool for evaluating traditional
-cache designs but also as a key instrument for the rigorous validation of
-emerging and extensible architectures.
+The validation of proposals in this domain relies on well-established
+simulation infrastructures. The gem5 architectural simulator
+\cite{gem5-20:2007} has become a fundamental tool for detailed architectural
+modeling, enabling systematic exploration of design parameters. In parallel,
+the investigation of spatial and temporal locality requires representative
+workloads, for which the PolyBench suite \cite{polybench:2016} is widely
+adopted due to its collection of mathematical kernels. The versatility of gem5
+has further driven recent research focused on Design Space Exploration
+(\textsc{dse}), of which a representative example is the work of Shahid et al.
+\cite{shahid:2025}, in which the authors employ the framework to improve the
+performance of the \textsc{risc}-V \textsc{cva6} core. Through parametric
+simulations, they identify configurations capable of balancing hardware cost
+and processor performance. This approach reinforces the suitability of gem5 not
+only as a tool for evaluating traditional cache designs but also as a key
+instrument for the rigorous validation of emerging and extensible
+architectures.
 
 \section{Methodology}
 \subsection{Testing Strategy with gem5}
 \subsubsection{General Approach Description}
 
-Tests were conducted using the gem5 simulator, enabling precise simulation of cache behavior across different hardware configurations. All workloads were compiled for x86 instruction set architecture, ensuring compatibility with the gem5 x86 simulator backend. For each workload, 32 distinct simulations were performed with varying cache configurations, enabling extensive analysis of cache parameters' impact on performance.
+Tests were conducted using the gem5 simulator, enabling precise simulation of
+cache behavior across different hardware configurations. All workloads were
+compiled for x86 instruction set architecture, ensuring compatibility with the
+gem5 x86 simulator backend. For each workload, 31 distinct simulations were
+performed with varying cache configurations, enabling extensive analysis of
+cache parameters' impact on performance.
 
 \subsubsection{Automation Framework (run\_all\_simulations.py)}
 
-The \texttt{run\_all\_simulations.py} script serves as the central orchestrator for simulations, implementing the following features:
+The \texttt{run\_all\_simulations.py} script serves as the central orchestrator
+for simulations, implementing the following features:
 
 \begin{itemize}
-  \item \textbf{Parallel Execution}: Uses \texttt{multiprocessing} to distribute simulations across multiple processors, significantly reducing total execution time
-  \item \textbf{Core Affinity}: Implements \textsc{cpu} pinning to improve data locality and reduce measurement variability
-  \item \textbf{Output Synchronization}: Ensures logs from different processes do not mix during parallel execution
-  \item \textbf{Completion Verification}: Automatically detects successful simulations by the presence of \texttt{stats.txt} with critical metrics (\texttt{simTicks}, \texttt{system.cpu.numCycles})
+	\item \textbf{Parallel Execution}: Uses \texttt{multiprocessing} to
+		distribute simulations across multiple processors, significantly
+		reducing total execution time
+	\item \textbf{Core Affinity}: Implements \textsc{cpu} pinning to improve
+		data locality and reduce measurement variability
+	\item \textbf{Output Synchronization}: Ensures logs from different
+		processes do not mix during parallel execution
+	\item \textbf{Completion Verification}: Automatically detects successful
+		simulations by the presence of \texttt{stats.txt} with critical metrics
+		(\texttt{simTicks}, \texttt{system.cpu.numCycles})
 \end{itemize}
 
 \subsubsection{Tested Cache Configurations}
 
-Each workload was tested against 13 realistic cache configurations based on real commercial architectures:
+Each workload was tested against 11 realistic cache configurations based on
+real commercial architectures:
 
 \begin{table}[h]
-\centering
-\caption{Cache configurations tested}
-\resizebox{\columnwidth}{!}{
-\begin{tabular}{|c|c|c|c|c|c|}
-\hline
-\textbf{Config} & \textbf{L1I} & \textbf{L1D} & \textbf{L2} & \textbf{L3} \\
-\hline
-Baseline & 32K & 32K & 256K & 8M \\
-i7-6700K & 32K & 32K & 256K & 8M \\
-i9-9900K & 32K & 32K & 256K & 16M \\
-Ryzen 5600X & 32K & 32K & 512K & 32M \\
-Ryzen 7700X & 32K & 32K & 1M & 32M \\
-Apple M1 & 64K & 64K & 4M & 8M \\
-Apple M2 & 64K & 64K & 4M & 16M \\
-Intel Atom & 32K & 32K & 1M & 4M \\
-Cortex A78 & 32K & 32K & 512K & 4M \\
-POWER10 & 32K & 32K & 2M & 8M \\
-Small Emb & 16K & 16K & 128K & 1M \\
-Large Srv & 64K & 64K & 2M & 64M \\
-\hline
-\end{tabular}
-}
+	\centering
+	\caption{Tested cache configuration presets}
+	\resizebox{\columnwidth}{!}{
+		\begin{tabular}{|c|c|c|c|c|c|}
+			\hline
+			\textbf{Config}     & \textbf{L1I} & \textbf{L1D} & \textbf{L2} & \textbf{L3} \\
+			\hline
+			i7-6700K (baseline) & 32KiB        & 32KiB        & 256KiB      & 8MiB        \\
+			i9-9900K            & 32KiB        & 32KiB        & 256KiB      & 16MiB       \\
+			Ryzen 5600X         & 32KiB        & 32KiB        & 512KiB      & 32MiB       \\
+			Ryzen 7700X         & 32KiB        & 32KiB        & 1MiB        & 32MiB       \\
+			Apple M1            & 64KiB        & 64KiB        & 4MiB        & 8MiB        \\
+			Apple M2            & 64KiB        & 64KiB        & 4MiB        & 16MiB       \\
+			Intel Atom          & 32KiB        & 32KiB        & 1MiB        & 4MiB        \\
+			Cortex A78          & 32KiB        & 32KiB        & 512KiB      & 4MiB        \\
+			POWER10             & 32KiB        & 32KiB        & 2MiB        & 8MiB        \\
+			Small Emb           & 16KiB        & 16KiB        & 128KiB      & 1MiB        \\
+			Large Srv           & 64KiB        & 64KiB        & 2MiB        & 64MiB       \\
+			\hline
+		\end{tabular}
+	}
 \end{table}
 
-\noindent\textit{Note:} For the Intel Atom and IBM POWER10 configurations, cache sizes were adjusted to the nearest power-of-two values to ensure compatibility with the gem5 simulator.
+\noindent\textit{Note:} For the Intel Atom and IBM POWER10 configurations,
+cache sizes were adjusted to the nearest power-of-two values to ensure
+compatibility with the gem5 simulator.
 
 
 \subsubsection{Additional Cache Parameters}
@@ -220,24 +236,26 @@ Large Srv & 64K & 64K & 2M & 64M \\
 In addition to size variations, the following configurations were tested:
 
 \begin{itemize}
-  \item \textbf{Cache Line Size}: 32, 64, 128, 256 bytes
-  \item \textbf{L1/L2 Associativity}: 1, 2, 4, 8, 16 ways
+	\item \textbf{Cache Line Size}: 32, 64, 128, 256 bytes
+	\item \textbf{L1/L2 Associativity}: 1, 2, 4, 8, 16 ways
 \end{itemize}
 
-All cache dimensions and associativity values were rounded to powers of 2, as required by the gem5 simulator.
+All cache dimensions and associativity values were rounded to powers of 2, as
+required by the gem5 simulator.
 
-Totaling 32 different variations per workload (13 base configurations + cache line variations + associativity variations).
+Totaling 31 different variations per workload (11 base configurations + cache
+line variations + associativity variations).
 
 \subsubsection{Statistics Collection}
 
 Each simulation generates a \texttt{stats.txt} file containing:
 
 \begin{itemize}
-  \item \textbf{\textsc{cpu} Cycles}: Total number of simulation cycles
-  \item \textbf{Cache Hits/Misses}: Hit and miss rates at each cache level
-  \item \textbf{Latencies}: Average access time at different levels
-  \item \textbf{Throughput}: Instructions per cycle (\textsc{ipc})
-  \item \textbf{Memory Pressure}: System bandwidth utilization
+	\item \textbf{\textsc{cpu} Cycles}: Total number of simulation cycles
+	\item \textbf{Cache Hits/Misses}: Hit and miss rates at each cache level
+	\item \textbf{Latencies}: Average access time at different levels
+	\item \textbf{Throughput}: Instructions per cycle (\textsc{ipc})
+	\item \textbf{Memory Pressure}: System bandwidth utilization
 \end{itemize}
 
 Data are collected through gem5-specific calls:
@@ -253,11 +271,14 @@ m5_dump_stats(0, 0);    // Capture statistics
 
 \subsubsection{\textsc{gemm} (General Matrix Multiply - PolyBench)}
 
-\paragraph{Type}: Linear Algebra | \paragraph{Access Pattern}: Sequential with Tiling
+\paragraph{Type}: Linear Algebra | \paragraph{Access Pattern}: Sequential with
+Tiling
 
 \paragraph{Description}
 
-\textsc{blas}-level implementation of generalized matrix multiplication: $C := \alpha \cdot A \cdot B + \beta \cdot C$. Uses parameterized datasets from the PolyBench benchmark.
+\textsc{blas}-level implementation of generalized matrix multiplication: $C :=
+\alpha \cdot A \cdot B + \beta \cdot C$. Uses parameterized datasets from the
+PolyBench benchmark.
 
 \paragraph{Kernel Main}
 
@@ -278,18 +299,20 @@ for (i = 0; i < _PB_NI; i++) {
 \paragraph{Dimensions Used (MEDIUM\_DATASET)}
 
 \begin{itemize}
-  \item $NI = 200$ (rows of A)
-  \item $NJ = 220$ (columns of B)
-  \item $NK = 240$ (shared dimension)
+	\item $NI = 200$ (rows of A)
+	\item $NJ = 220$ (columns of B)
+	\item $NK = 240$ (shared dimension)
 \end{itemize}
 
 \paragraph{Performance Characteristics}
 
 \begin{itemize}
-  \item \textbf{Temporal Locality}: Very High (C[i][j] reused multiple times)
-  \item \textbf{Spatial Locality}: High (access in tiling-friendly pattern)
-  \item \textbf{Cache Hit Rate}: Expected high, especially with cache blocking
-  \item \textbf{Cache Sensitivity}: High - optimized configurations can double performance
+	\item \textbf{Temporal Locality}: Very High (C[i][j] reused multiple times)
+	\item \textbf{Spatial Locality}: High (access in tiling-friendly pattern)
+	\item \textbf{Cache Hit Rate}: Expected high, especially with cache
+		blocking
+	\item \textbf{Cache Sensitivity}: High - optimized configurations can
+		double performance
 \end{itemize}
 
 \paragraph{Mathematical Equation}
@@ -299,17 +322,22 @@ for (i = 0; i < _PB_NI; i++) {
 \paragraph{Complexity}
 
 \begin{itemize}
-  \item \textbf{Temporal}: $O(NI \times NJ \times NK) = O(200 \times 220 \times 240) = O(10.56 \times 10^{6})$ operations
-  \item \textbf{Spatial}: $O(NI \times NK + NK \times NJ + NI \times NJ) \approx 1.1$ MB with double precision
+	\item \textbf{Temporal}: $O(NI \times NJ \times NK) = O(200 \times 220
+		\times 240) = O(10.56 \times 10^{6})$ operations
+	\item \textbf{Spatial}: $O(NI \times NK + NK \times NJ + NI \times NJ)
+		\approx 1.1$ MB with double precision
 \end{itemize}
 
 \subsubsection{\textsc{ata}x (Matrix Transpose Vector - PolyBench)}
 
-\paragraph{Type}: Linear Algebra | \paragraph{Access Pattern}: Sequential with Transposition
+\paragraph{Type}: Linear Algebra | \paragraph{Access Pattern}: Sequential with
+Transposition
 
 \paragraph{Description}
 
-Computes matrix transpose application followed by vector multiplication: $y := A^T \cdot (A \cdot x) + z$. Demonstrates non-sequential access patterns in one dimension.
+Computes matrix transpose application followed by vector multiplication: $y :=
+A^T \cdot (A \cdot x) + z$. Demonstrates non-sequential access patterns in one
+dimension.
 
 \paragraph{Kernel Main}
 
@@ -328,17 +356,19 @@ for (i = 0; i < _PB_N; i++)
 \paragraph{Dimensions Used (LARGE\_DATASET)}
 
 \begin{itemize}
-  \item $M = 1900$ (number of columns)
-  \item $N = 2100$ (number of rows)
+	\item $M = 1900$ (number of columns)
+	\item $N = 2100$ (number of rows)
 \end{itemize}
 
 \paragraph{Performance Characteristics}
 
 \begin{itemize}
-  \item \textbf{Temporal Locality}: Moderate (y and z redefinition in inner loops)
-  \item \textbf{Spatial Locality}: Moderate-High (column access in second stage)
-  \item \textbf{Cache Hit Rate}: Moderate - non-sequential access hurts cache
-  \item \textbf{Cache Sensitivity}: Moderate
+	\item \textbf{Temporal Locality}: Moderate (y and z redefinition in inner
+		loops)
+	\item \textbf{Spatial Locality}: Moderate-High (column access in second
+		stage)
+	\item \textbf{Cache Hit Rate}: Moderate - non-sequential access hurts cache
+	\item \textbf{Cache Sensitivity}: Moderate
 \end{itemize}
 
 \paragraph{Mathematical Equations}
@@ -352,7 +382,9 @@ for (i = 0; i < _PB_N; i++)
 
 \paragraph{Description}
 
-Classic dynamic programming algorithm for finding shortest paths between all pairs of vertices. Demonstrates complex data reuse pattern with three levels of nesting.
+Classic dynamic programming algorithm for finding shortest paths between all
+pairs of vertices. Demonstrates complex data reuse pattern with three levels of
+nesting.
 
 \paragraph{Kernel Main}
 
@@ -372,25 +404,28 @@ for (k = 0; k < _PB_N; k++) {
 \paragraph{Dimensions Used (SMALL\_DATASET)}
 
 \begin{itemize}
-  \item $N = 180$ (number of nodes)
-  \item Distance matrix: $180 \times 180$ elements
+	\item $N = 180$ (number of nodes)
+	\item Distance matrix: $180 \times 180$ elements
 \end{itemize}
 
 \paragraph{Performance Characteristics}
 
 \begin{itemize}
-  \item \textbf{Temporal Locality}: Very High (path[i][j], path[i][k], path[k][j] reused)
-  \item \textbf{Spatial Locality}: High (access in dense 2D pattern)
-  \item \textbf{Cache Hit Rate}: High - working set fits in L3
-  \item \textbf{Cache Sensitivity}: High - L3 miss is very costly
-  \item \textbf{Access Pattern}: Streaming with reuse (layer-wise)
+	\item \textbf{Temporal Locality}: Very High (path[i][j], path[i][k],
+		path[k][j] reused)
+	\item \textbf{Spatial Locality}: High (access in dense 2D pattern)
+	\item \textbf{Cache Hit Rate}: High - working set fits in L3
+	\item \textbf{Cache Sensitivity}: High - L3 miss is very costly
+	\item \textbf{Access Pattern}: Streaming with reuse (layer-wise)
 \end{itemize}
 
 \paragraph{Complexity}
 
 \begin{itemize}
-  \item \textbf{Temporal}: $O(N^3) = O(180^3) \approx 5.8 \times 10^{6}$ comparisons
-  \item \textbf{Spatial}: $O(N^2) \approx 129.6$ \textsc{kb} for distance matrix (integers)
+	\item \textbf{Temporal}: $O(N^3) = O(180^3) \approx 5.8 \times 10^{6}$
+		comparisons
+	\item \textbf{Spatial}: $O(N^2) \approx 129.6$ \textsc{kb} for distance
+		matrix (integers)
 \end{itemize}
 
 \paragraph{Applications}
@@ -403,7 +438,9 @@ Network routing, graph analysis, path length algorithms.
 
 \paragraph{Description}
 
-Implementation of the Jacobi iterative method for solving linear systems in 2D. Uses ``stencil'' access pattern where each point depends on its 5 neighbors (center, top, bottom, left, right).
+Implementation of the Jacobi iterative method for solving linear systems in 2D.
+Uses ``stencil'' access pattern where each point depends on its 5 neighbors
+(center, top, bottom, left, right).
 
 \paragraph{Kernel Main}
 
@@ -427,19 +464,21 @@ for (t = 0; t < _PB_TSTEPS; t++) {
 \paragraph{Dimensions Used (MEDIUM\_DATASET)}
 
 \begin{itemize}
-  \item Mesh: $250 \times 250$
-  \item Time iterations (TSTEPS): 100
-  \item Total operations: $\sim 6.25 \times 10^{6}$
+	\item Mesh: $250 \times 250$
+	\item Time iterations (TSTEPS): 100
+	\item Total operations: $\sim 6.25 \times 10^{6}$
 \end{itemize}
 
 \paragraph{Performance Characteristics}
 
 \begin{itemize}
-  \item \textbf{Temporal Locality}: Moderate-High (alternation between A and B)
-  \item \textbf{Spatial Locality}: Very High (access to 5 neighbors close together)
-  \item \textbf{Cache Hit Rate}: Very High - stencil fits in cache
-  \item \textbf{Cache Sensitivity}: Moderate (well-defined working set)
-  \item \textbf{Access Pattern}: Stencil with regular reuse
+	\item \textbf{Temporal Locality}: Moderate-High (alternation between A and
+		B)
+	\item \textbf{Spatial Locality}: Very High (access to 5 neighbors close
+		together)
+	\item \textbf{Cache Hit Rate}: Very High - stencil fits in cache
+	\item \textbf{Cache Sensitivity}: Moderate (well-defined working set)
+	\item \textbf{Access Pattern}: Stencil with regular reuse
 \end{itemize}
 
 \paragraph{Computational Equation}
@@ -452,15 +491,19 @@ B[i,j]^{(n)} = 0.2 \times (A[i,j]^{(n)} + A[i,j-1]^{(n)} + A[i,j+1]^{(n)} \\
 
 \paragraph{Applications}
 
-Heat transfer simulation, partial differential equation solving, computational fluid dynamics.
+Heat transfer simulation, partial differential equation solving, computational
+fluid dynamics.
 
 \subsubsection{Seidel-2D (Gauss-Seidel - PolyBench)}
 
-\paragraph{Type}: Numerical Simulation | \paragraph{Access Pattern}: 2D Stencil with Convergence
+\paragraph{Type}: Numerical Simulation | \paragraph{Access Pattern}: 2D Stencil
+with Convergence
 
 \paragraph{Description}
 
-Variant of the Jacobi method using Gauss-Seidel sweep, where each point uses already-updated values in the current iteration. Presents slight reduction in locality compared to Jacobi.
+Variant of the Jacobi method using Gauss-Seidel sweep, where each point uses
+already-updated values in the current iteration. Presents slight reduction in
+locality compared to Jacobi.
 
 \paragraph{Kernel Main}
 
@@ -481,19 +524,22 @@ for (t = 0; t <= _PB_TSTEPS-1; t++)
 \paragraph{Dimensions Used (MEDIUM\_DATASET)}
 
 \begin{itemize}
-  \item Mesh: $400 \times 400$
-  \item Time iterations (TSTEPS): 100
-  \item Neighborhood pattern: 9 points (Moore neighborhood)
+	\item Mesh: $400 \times 400$
+	\item Time iterations (TSTEPS): 100
+	\item Neighborhood pattern: 9 points (Moore neighborhood)
 \end{itemize}
 
 \paragraph{Performance Characteristics}
 
 \begin{itemize}
-  \item \textbf{Temporal Locality}: Moderate (limited reuse between timesteps)
-  \item \textbf{Spatial Locality}: Very High (9 neighbors accessed sequentially)
-  \item \textbf{Cache Hit Rate}: Very High - better than Jacobi in some aspects
-  \item \textbf{Cache Sensitivity}: Moderate-High
-  \item \textbf{Access Pattern}: Dense stencil with 9 points
+	\item \textbf{Temporal Locality}: Moderate (limited reuse between
+		timesteps)
+	\item \textbf{Spatial Locality}: Very High (9 neighbors accessed
+		sequentially)
+	\item \textbf{Cache Hit Rate}: Very High - better than Jacobi in some
+		aspects
+	\item \textbf{Cache Sensitivity}: Moderate-High
+	\item \textbf{Access Pattern}: Dense stencil with 9 points
 \end{itemize}
 
 \paragraph{Computational Equation}
@@ -502,15 +548,21 @@ for (t = 0; t <= _PB_TSTEPS-1; t++)
 
 \paragraph{Difference with Jacobi}
 
-Uses 9 points in Moore neighborhood versus 5 points in von Neumann neighborhood, resulting in larger data volume accessed but possibly better convergence.
+Uses 9 points in Moore neighborhood versus 5 points in von Neumann
+neighborhood, resulting in larger data volume accessed but possibly better
+convergence.
 
 \subsection{Justification for Workload Selection}
 
 \begin{enumerate}
-  \item \textbf{PolyBench Suite}: Widely accepted benchmark set in the academic community for scientific computing
-  \item \textbf{Diversity}: Covers access patterns from sequential to complex global patterns
-  \item \textbf{Realism}: Reflect practical applications (simulations, linear algebra, graph processing)
-  \item \textbf{Complete Coverage}: Encompass computational stencil, linear algebra, and graph algorithms
+	\item \textbf{PolyBench Suite}: Widely accepted benchmark set in the
+		academic community for scientific computing
+	\item \textbf{Diversity}: Covers access patterns from sequential to complex
+		global patterns
+	\item \textbf{Realism}: Reflect practical applications (simulations, linear
+		algebra, graph processing)
+	\item \textbf{Complete Coverage}: Encompass computational stencil, linear
+		algebra, and graph algorithms
 \end{enumerate}
 
 
@@ -519,14 +571,14 @@ Uses 9 points in Moore neighborhood versus 5 points in von Neumann neighborhood,
 \section{Results}
 \subsection{Overview}
 
-Overall, only a small subset of the values explored in our parameter sweep had a
-significant impact on the sampled metrics. The most dominant parameter across
+Overall, only a small subset of the values explored in our parameter sweep had
+a significant impact on the sampled metrics. The most dominant parameter across
 all workloads by far was the cache line size, wherein doubling the line size
 tends to significantly reduce L1D miss rate, often approaching a halving for
-highly sequential access patterns (\textsc{ipc} improves accordingly), probably because
-larger lines increase spatial locality utilization per miss, and associativity
-effects are mostly tied to cache entry conflicts within a set. As such,
-associativity effects were largely flat, and the capacity presets impact
+highly sequential access patterns (\textsc{ipc} improves accordingly), probably
+because larger lines increase spatial locality utilization per miss, and
+associativity effects are mostly tied to cache entry conflicts within a set. As
+such, associativity effects were largely flat, and the capacity presets impact
 performance selectively, and only when dataset footprints\footnote{To be
 understood as the kernel's hot working set.} fit in the larger caches.
 
@@ -545,24 +597,25 @@ understood as the kernel's hot working set.} fit in the larger caches.
 \subsection{Cache Line Size Effects}\label{sub:cacheline}
 
 Larger lines better exploit spatial locality by coalescing contiguous words per
-tag. Thus, fewer L1D misses propagate as lower miss latencies and lead to \textsc{cpi}
-gains. To point out some examples, Fig.~\ref{fig:atax-speedup-line} shows that,
-for the \textsc{ata}x kernel, contiguous accesses give high spatial locality, and
-doubling line size captures more contiguous work per refill, which in turn
-reduces the number of refills. On Fig.~\ref{fig:jacobi-mpki-line}, Jacobi-2D
-shows the same spatial-locality response, and on
-Fig.~\ref{fig:seidel-stalls-line}, we see that Seidel-2D sees dramatic
-reductions in miss latencies with larger lines.\footnote{In these latter two,
-it's worth noting that \textsc{cpi} gains are present but smaller, because a significant
-fraction of execution is compute. A larger dataset would probably correspond to
-a more dramatic \textsc{cpi} reduction.} Finally, Fig.~\ref{fig:gemm-cpi-line} shows
-modest \textsc{cpi} improvements for \textsc{gemm}, arguably due to inherent temporal locality and
-compute intensity.
+tag. Thus, fewer L1D misses propagate as lower miss latencies and lead to
+\textsc{cpi} gains. To point out some examples,
+Fig.~\ref{fig:atax-speedup-line} shows that, for the \textsc{ata}x kernel,
+contiguous accesses give high spatial locality, and doubling line size captures
+more contiguous work per refill, which in turn reduces the number of refills.
+On Fig.~\ref{fig:jacobi-mpki-line}, Jacobi-2D shows the same spatial-locality
+response, and on Fig.~\ref{fig:seidel-stalls-line}, we see that Seidel-2D sees
+dramatic reductions in miss latencies with larger lines.\footnote{In these
+latter two, it's worth noting that \textsc{cpi} gains are present but smaller,
+because a significant fraction of execution is compute. A larger dataset would
+probably correspond to a more dramatic \textsc{cpi} reduction.} Finally,
+Fig.~\ref{fig:gemm-cpi-line} shows modest \textsc{cpi} improvements for
+\textsc{gemm}, arguably due to inherent temporal locality and compute
+intensity.
 
 \begin{figure}[!htbp]
     \centering
-    \caption{\textbf{\textsc{ata}x} relative speedup vs. cache line sizes. Correlation
-    indicates a strongly spatial, memory-sensitive kernel.}
+	\caption{\textbf{\textsc{ata}x} relative speedup vs. cache line sizes.
+	Correlation indicates a strongly spatial, memory-sensitive kernel.}
     \label{fig:atax-speedup-line}
     \includegraphics[width=\linewidth]{atax_speedup_vs_cache_line.pdf}
 \end{figure}
@@ -585,8 +638,8 @@ compute intensity.
 
 \begin{figure}[!htbp]
     \centering
-    \caption{\textbf{\textsc{gemm}} \textsc{cpi} shows gains are modest, because kernel is
-    compute-heavy with non-zero memory sensitivity.}
+	\caption{\textbf{\textsc{gemm}} \textsc{cpi} shows gains are modest,
+	because kernel is compute-heavy with non-zero memory sensitivity.}
     \label{fig:gemm-cpi-line}
     \includegraphics[width=\linewidth]{gemm_cpi_vs_cache_line.pdf}
 \end{figure}
@@ -596,18 +649,18 @@ compute intensity.
 Cache associativity was by far the least significant cache parameter, and the
 impact was almost negligible (a few tenths of a percent). Mechanically,
 associativity reduces conflict misses by allowing multiple cache lines that map
-to the same set to coexist. In our kernels, most accesses are regular and spread
-across many sets. That is because strides are low or simple stencils are used.
-Thus, conflict pressure is low, suggesting that misses are dominated by
-compulsory and capacity effects. The only exception is when associativity is one
-(the cache is directly mapped), due to the fact that \textit{all} conflicts will
-lead to an eviction. This can be seen in Fig.~\ref{fig:comp-ipc-l1} as slightly
-lower instructions per cycle when the L1 caches are directly mapped.
+to the same set to coexist. In our kernels, most accesses are regular and
+spread across many sets. That is because strides are low or simple stencils are
+used. Thus, conflict pressure is low, suggesting that misses are dominated by
+compulsory and capacity effects. The only exception is when associativity is
+one (the cache is directly mapped), due to the fact that \textit{all} conflicts
+will lead to an eviction. This can be seen in Fig.~\ref{fig:comp-ipc-l1} as
+slightly lower instructions per cycle when the L1 caches are directly mapped.
 
 \begin{figure}[!htbp]
     \centering
-    \caption{\textsc{ipc} vs. L1 associativity across kernels shows negligible impact on
-    performance.}
+	\caption{\textsc{ipc} vs. L1 associativity across kernels shows negligible
+	impact on performance.}
     \label{fig:comp-ipc-l1}
     \includegraphics[width=\linewidth]{comparison_ipc_vs_l1_assoc.pdf}
 \end{figure}
@@ -616,26 +669,27 @@ lower instructions per cycle when the L1 caches are directly mapped.
 
 The presets change the nominal capacity of L1, L2, and L3. Larger overall
 capacities reduce misses \textit{when} the kernel's hot working set is small
-enough that the last-level cache (\textsc{llc}) can hold a significant fraction of the
-set. When the set is significantly larger than the \textsc{llc} can hold, or when most
-misses are compulsory, such that spatial locality optimizations (e.g., larger
-lines) are more impactful, as we exemplified in \ref{sub:cacheline}, capacity
-changes have little effect. Fig.~\ref{fig:comp-ipc-size} shows which workloads
-had most gains, and Fig.~\ref{fig:atax-speed-size} shows the effect on the \textsc{ata}x
-kernel, which had the most dramatic improvement.
+enough that the last-level cache (\textsc{llc}) can hold a significant fraction
+of the set. When the set is significantly larger than the \textsc{llc} can
+hold, or when most misses are compulsory, such that spatial locality
+optimizations (e.g., larger lines) are more impactful, as we exemplified in
+\ref{sub:cacheline}, capacity changes have little effect.
+Fig.~\ref{fig:comp-ipc-size} shows which workloads had most gains, and
+Fig.~\ref{fig:atax-speed-size} shows the effect on the \textsc{ata}x kernel,
+which had the most dramatic improvement.
 
 \begin{figure}[!htbp]
     \centering
-    \caption{$\Delta$\textsc{ipc} across cache configurations, showing that only a subset
-    produces noticeable gains.}
+	\caption{$\Delta$\textsc{ipc} across cache configurations, showing that
+	only a subset produces noticeable gains.}
     \label{fig:comp-ipc-size}
     \includegraphics[width=\linewidth]{comparison_ipc_vs_cache_config.pdf}
 \end{figure}
 
 \begin{figure}[!htbp]
     \centering
-    \caption{\textbf{\textsc{ata}x} speedup as total cache size grows was the highest
-    among all tested kernels.}
+	\caption{\textbf{\textsc{ata}x} speedup as total cache size grows was the
+	highest among all tested kernels.}
     \label{fig:atax-speed-size}
     \includegraphics[width=\linewidth]{atax_speedup_vs_cache_config.pdf}
 \end{figure}
@@ -644,22 +698,23 @@ kernel, which had the most dramatic improvement.
 
 \subsubsection{Instruction cache misses} Across all 155 simulations, the total
 miss count for the instruction cache was \textit{always} zero. This is to be
-expected, because by the time the workload binary calls the \textit{libm5} \textsc{api}
-to start counting statistics, the working set of instructions has already been
-fetched into the instruction cache and easily fits within its capacity: the
-relocatable object corresponding to the main translation unit of each workload
-is on the order of a few kilobytes.
+expected, because by the time the workload binary calls the \textit{libm5}
+\textsc{api} to start counting statistics, the working set of instructions has
+already been fetched into the instruction cache and easily fits within its
+capacity: the relocatable object corresponding to the main translation unit of
+each workload is on the order of a few kilobytes.
 
 \subsubsection{Impact of dataset sizes} As we detailed in \ref{sub:workloads},
-different workloads were set to use different dataset size configurations due to
-time constraints. The \textsc{ata}x kernel was compiled with the LARGE\_DATASET
-definition, the Floyd-Warshall kernel with SMALL\_DATASET, and the remaining
-kernels with MEDIUM\_DATASET. This may explain why the \textsc{ata}x simulations
-exhibited the largest absolute jumps in \textsc{mpki}, miss rates, total
-latencies, and \textsc{cpi}, whereas Floyd-Warshall exhibited the smallest jumps: larger
-dataset sizes may increase working-set pressure, such that, if the working set
-is near the cache size boundary, changes in total cache capacity and line size
-may materially change miss behavior.
+different workloads were set to use different dataset size configurations due
+to time constraints. The \textsc{ata}x kernel was compiled with the
+LARGE\_DATASET definition, the Floyd-Warshall kernel with SMALL\_DATASET, and
+the remaining kernels with MEDIUM\_DATASET. This may explain why the
+\textsc{ata}x simulations exhibited the largest absolute jumps in
+\textsc{mpki}, miss rates, total latencies, and \textsc{cpi}, whereas
+Floyd-Warshall exhibited the smallest jumps: larger dataset sizes may increase
+working-set pressure, such that, if the working set is near the cache size
+boundary, changes in total cache capacity and line size may materially change
+miss behavior.
 
 \section{Conclusion}
 
