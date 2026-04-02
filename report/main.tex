@@ -8,7 +8,20 @@
 \usepackage{textcomp}
 \usepackage{xcolor}
 
+\usepackage{newtxtext,newtxmath}
 \usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{embedfile}
+
+\embedfile[
+	desc={LaTeX source for this document},
+	mimetype=text/plain
+]{main.tex}
+
+\embedfile[
+	desc={BibTeX source file with references},
+	mimetype=text/plain
+]{references.bib}
 
 \begin{document}
 
