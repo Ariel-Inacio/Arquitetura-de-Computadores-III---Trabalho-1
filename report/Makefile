@@ -12,7 +12,7 @@ LATEXFLAGS = -O build
 CLEANFLAGS = --clean-all -O build
 RELEASE    = $(NAME)_$(VER)
 
-.PHONY: all clean release force
+.PHONY: all clean release
 
 all: $(MAIN).pdf
 
@@ -24,8 +24,9 @@ clean:
 		*.log *.blg *.ilg *.ind *.out *.wsp *.fls *.synctex* *.zip  \
 		*.tar.gz *.tar.xz *.tar.zst *.*~ build/ latex.out/
 
-$(MAIN).pdf: $(ETC) force $(FIG)
+$(MAIN).pdf: $(ETC) $(FIG)
 	$(LATEX) $(LATEXFLAGS) $(MAIN).tex
+	@touch $(MAIN).pdf
 
 $(RELEASE).pdf: $(MAIN).pdf
 	gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/prepress \
@@ -44,7 +45,7 @@ $(RELEASE).tar.xz: $(RELEASE).tar
 	xz -kf $(RELEASE).tar
 
 $(RELEASE).tar.zst: $(RELEASE).tar
-	zstd -f $(RELEASE).tar
+	zstd -qf $(RELEASE).tar
 
 $(RELEASE).zip: $(MAIN).pdf $(RELEASE).pdf
 	zip -r                 \
