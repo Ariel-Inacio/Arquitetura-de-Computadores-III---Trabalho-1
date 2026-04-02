@@ -20,16 +20,17 @@ Parameters varied:
 
 import re
 import sys
-from pathlib import Path
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple, Callable, Sequence, Union, Any
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 import matplotlib.pyplot as plt
-from matplotlib import cm, colors as mcolors
 import numpy as np
 import pandas as pd  # type: ignore[import-not-found]
 import scienceplots  # type: ignore[import-not-found]
+from matplotlib import cm
+from matplotlib import colors as mcolors
 
 assert (
     scienceplots  # ensure the imported style package is recognized as used by linters
@@ -1050,9 +1051,9 @@ def create_workload_figures(
                 )
 
             ax.set_ylabel(
-                ("$\\Delta$ Speedup (ratio-1) vs baseline")
+                "Relative Speedup $(\\frac{\\mathrm{IPC}}{\\mathrm{IPC}_{\\text{baseline}}} - 1)$"
                 if is_categorical
-                else "Relative Speedup (vs Baseline)"
+                else "Speedup $(\\frac{\\mathrm{IPC}}{\\mathrm{IPC}_{\\text{baseline}}})$"
             )
             xlabel = XLABEL_MAP.get(param_type, param_type)
             if xlabel:
