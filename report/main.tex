@@ -457,10 +457,10 @@ Overall, only a small subset of the values explored in our parameter sweep had
 a significant impact on the sampled metrics. The most dominant parameter across
 all workloads by far was the cache line size, wherein doubling the line size
 tends to significantly reduce L1D miss rate, often approaching a halving for
-highly sequential access patterns (\textsc{ipc} improves accordingly), probably
-because larger lines increase spatial locality utilization per miss, and
-associativity effects are mostly tied to cache entry conflicts within a set. As
-such, associativity effects were largely flat, and the capacity presets impact
+highly sequential access patterns (\textsc{ipc} improves accordingly), because
+larger lines increase spatial locality utilization per miss, and associativity
+effects are mostly tied to cache entry conflicts within a set. As such,
+associativity effects were largely flat, and the capacity presets impact
 performance selectively, and only when dataset footprints\footnote{To be
 understood as the kernel's hot working set.} fit in the larger caches.
 
@@ -491,8 +491,7 @@ latter two, it's worth noting that \textsc{cpi} gains are present but smaller,
 because a significant fraction of execution is compute. A larger dataset would
 probably correspond to a more dramatic \textsc{cpi} reduction.} Finally,
 Fig.~\ref{fig:gemm-cpi-line} shows modest \textsc{cpi} improvements for
-\textsc{gemm}, arguably due to inherent temporal locality and compute
-intensity.
+\textsc{gemm}, due to inherent temporal locality and compute intensity.
 
 \begin{figure}[!htbp]
     \centering
