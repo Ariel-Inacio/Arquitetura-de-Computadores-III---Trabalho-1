@@ -370,6 +370,17 @@ Specifically, gem5 annotation calls were placed immediately before and after
 the kernel invocation, which ensures precise control over when statistics
 collection begins and ends.
 
+For each run we record a standard set of counters from gem5's generated
+\texttt{stats.txt}: processor throughput (\textsc{ipc}/\textsc{cpi}); per-level
+cache hits and misses and their miss rates (L1I, L1D, L2, L3); and two derived
+quantities: \textsc{mpki} (misses per kilo instructions) for each level, and
+the total miss-latency (sum of overall miss latencies across levels) used as a
+proxy for memory stalls. For comparisons, we use a consistent per-workload
+baseline preset: categorical presets are shown as deltas or speedup
+(\(\mathrm{IPC}/\mathrm{IPC}_{\text{baseline}}\)), while numeric sweeps (e.g.,
+cache line size) are plotted as absolute values, with logarithmic scales
+applied where appropriate to span orders of magnitude.
+
 \subsection{Datasets}\label{sub:dataset-size}
 
 PolyBench kernels are parameterized by dataset size through preprocessor
