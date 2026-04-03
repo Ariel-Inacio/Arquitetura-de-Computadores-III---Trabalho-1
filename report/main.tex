@@ -15,10 +15,11 @@
 \usepackage{textcomp}
 \usepackage{xcolor}
 
-\usepackage{newtxtext,newtxmath}
-\usepackage{hyperref}
-\usepackage{graphicx}
 \usepackage{embedfile}
+\usepackage[inline]{enumitem}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{newtxtext,newtxmath}
 
 \embedfile[
 	desc={LaTeX source for this document},
@@ -599,7 +600,40 @@ capacity and line size may materially change miss behavior.
 
 \section{Conclusion}
 
+We evaluated the sensitivity of cache hierarchies across five PolyBench
+kernels under a controlled and reproducible simulation methodology.
+By decoupling realistic capacity presets from orthogonal cache parameters,
+we observed that:
+\begin{enumerate*}[label=(\alph*), itemjoin={;\ }, itemjoin*={; and\ }]
+    \item cache line size is the dominant factor, consistently reducing L1D
+    miss rates and improving \textsc{cpi} in memory-sensitive regimes
+    \item associativity has limited impact for regular access patterns, with
+    noticeable effects primarily in direct-mapped configurations
+    \item increased capacity provides benefits selectively, mainly when the
+    working set approaches the \textsc{llc} capacity.
+\end{enumerate*}
+These results suggest that, for regular workloads with predictable access
+patterns, spatial locality optimizations yield the largest performance gains,
+while conflict-related effects are comparatively minor.
 
+The interpretation of these results is subject to several limitations. First,
+all experiments were conducted using an in-order core model, which does not
+capture the effects of out-of-order execution or memory-level parallelism.
+Second, dataset sizes were adjusted to ensure tractable simulation times, which
+may reduce pressure on the memory hierarchy relative to real-world scenarios.
+Finally, the selected workloads exhibit regular access patterns, and therefore
+may not reflect the behavior of irregular or indirection-intensive
+applications.
+
+Reproducibility is a central aspect of this work. The entire experimental
+pipeline---including dependency management, workload compilation, simulation
+orchestration, and analysis---is encoded in a deterministic build graph with
+pinned versions, enabling consistent regeneration of results across
+environments. Future works may consider scaling datasets to stress
+\textsc{llc}s and main memory more aggressively, extending the workload set to
+include irregular applications, exploring additional cache design dimensions
+such as replacement and prefetching policies, and evaluating the same parameter
+space on out-of-order cores.
 
 \bibliographystyle{IEEEtran}
 \bibliography{references}
