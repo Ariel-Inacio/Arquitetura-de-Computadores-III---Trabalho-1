@@ -25,7 +25,7 @@ clean:
 		*.log *.blg *.ilg *.ind *.out *.wsp *.fls *.synctex* *.zip  \
 		*.tar.gz *.tar.xz *.tar.zst *.*~ build/ latex.out/
 
-$(MAIN).pdf: $(ETC) $(FIG)
+$(MAIN).pdf: $(MAIN).tex $(ETC) $(FIG)
 	$(LATEX) $(LATEXFLAGS) $(MAIN).tex
 	@touch $(MAIN).pdf
 
