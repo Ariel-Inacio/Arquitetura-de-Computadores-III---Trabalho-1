@@ -58,27 +58,30 @@
 
 \begin{abstract}
 
-	This work presents a systematic, reproducible study of cache hierarchy
-	effects on a set of five PolyBench kernels using gem5. We perform a
-	controlled parameter sweep over cache sizes, cache line sizes, and
-	associativities, and collected detailed gem5 statistics for each run. We
-	focus on standard microarchitectural metrics (miss rate, \textsc{mpki},
-	\textsc{ipc}/\textsc{cpi}, memory-related stall cycles) and on relative
-	speedup against a baseline configuration. Results show workload-dependent
-	tradeoffs: some kernels are dominated by data working‑set effects (L1D/L2),
-	while others exhibit negligible icache pressure; visualization and
-	\textsc{mpki} decomposition reveal where increased capacity or
-	associativity yields diminishing returns. The artifacts and methodology aim
-	to help students and researchers perform rigorous, replicable cache
-	design‑space evaluations.
+	We present a systematic and reproducible evaluation of cache hierarchy
+	sensitivities across five PolyBench kernels using the gem5 simulator. Our
+	study separates realistic multi-level capacity presets from two orthogonal
+	parameters  to isolate spatial and conflict effects. For each workload we
+	execute a controlled sweep and collect a standard set of per-level miss
+	rates and \textsc{mpki}, total miss latency, \textsc{ipc}/\textsc{cpi}.
+	Three findings emerge. First, cache line size is the dominant factor:
+	doubling the line often halves L1D miss rate and improves \textsc{ipc}
+	where memory stalls are non-trivial. Second, associativity has minimal
+	impact for these regular kernels, with the notable exception of
+	direct-mapped caches. Third, capacity presets matter selectively when the
+	hot working set approaches the \textsc{llc} boundary; otherwise spatial
+	locality dominates. To strengthen reproducibility, we encode the full
+	pipeline in a single build graph with pinned versions for all components,
+	and statically link workloads. The resulting methodology and artifacts
+	facilitate transparent and repeatable cache design-space exploration, and
+	provide a baseline for future studies that consider larger datasets,
+	alternative cache policies, or out-of-order cores.
 
 \end{abstract}
 
 \begin{IEEEkeywords}
-
     Memory hierarchy, cache memories, simulation, performance analysis and
     design aids, modeling of computer architecture
-
 \end{IEEEkeywords}
 
 \section{Introduction}
